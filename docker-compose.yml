@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  # dynamodb docker container
+  dynamodb:
+    # image file
+    image: amazon/dynamodb-local
+    container_name: dynamodb-local
+    volumes:
+        # host側 : container側
+      - "./local/dynamodb:/data"
+    ports:
+        # host側 : container側
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -port 8000 -sharedDb -dbPath /data"
+    networks:
+      - back-tier
+
+  # lambda:python docker container
+  lambda:
+    # image file
+    image: lambci/lambda:python3.8
+    container_name: lambda-py38-local
+    environment:
+      ENV: 'LOCAL'
+      AWS_LAMBDA_FUNCTION_VERSION: "$LATEST"
+      AWS_LAMBDA_FUNCTION_ALIAS: 'dev'
+    volumes:
+        # host側 : container側
+      - "./:/var/task"
+    ports:
+        # host側 : container側
+      - "8001:8001"
+    command: "local.sample.hello_world.lambda_handler"
+    networks:
+      - back-tier
+
+# network
+networks:
+  back-tier:
